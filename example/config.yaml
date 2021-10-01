@@ -1,0 +1,16 @@
+server:
+  address: ":8085"
+stores:
+  mem:
+    type: memory
+
+webhooks:
+  test:
+    type: basic
+    config:
+      secret: sauce
+
+bundles:
+  test:
+    store: mem
+    webhook: test
