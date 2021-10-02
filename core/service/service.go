@@ -134,6 +134,7 @@ func (s *Service) LoadBundles() error {
 			Name:    name,
 			Logger:  s.logger,
 			Webhook: config.Webhook,
+			Config:  config,
 		}
 
 		if b.Store, ok = s.stores[config.Store]; !ok {
@@ -142,10 +143,6 @@ func (s *Service) LoadBundles() error {
 
 		if err := b.Activate(); err != nil {
 			s.logger.Errorf("failed to activate bundle %s", name)
-		}
-
-		if err := b.Rebuild(context.TODO()); err != nil {
-			s.logger.Errorf("failed to build bundle %s: %s", name, err)
 		}
 
 		s.bundles[name] = b

@@ -46,6 +46,13 @@ type Bundle struct {
 	Publisher  string   `json:"publisher" yaml:"publisher"`
 	Subscriber string   `json:"subscriber" yaml:"subscriber"`
 	Remotes    []string `json:"remotes" yaml:"remotes"`
+	Polling    Polling  `json:"polling" yaml:"polling"`
+}
+
+type Polling struct {
+	Disable         bool  `json:"disable" yaml:"disable"`
+	MinDelaySeconds int64 `json:"min_delay_seconds" yaml:"min_delay_seconds"`
+	MaxDelaySeconds int64 `json:"max_delay_seconds" yaml:"max_delay_seconds"`
 }
 
 // NewConfig creates a new config from config content
