@@ -1,16 +1,24 @@
 server:
   address: ":8085"
+
 stores:
-  mem:
-    type: memory
+  test:
+    type: consul
+    config:
+      prefix: bundles/test
+      consul:
+        address: http://consul1:8500
 
 webhooks:
   test:
-    type: basic
+    type: gogs
     config:
       secret: sauce
+      events:
+        - push
 
 bundles:
   test:
-    store: mem
+    store: test
     webhook: test
+    

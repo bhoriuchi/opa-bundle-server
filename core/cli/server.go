@@ -42,8 +42,9 @@ func initServerStartCmd() *cobra.Command {
 			}
 
 			cfg := &service.Config{
-				Watch: watch,
-				File:  p,
+				Watch:    watch,
+				File:     p,
+				LogLevel: logLevel,
 			}
 
 			srv, err := server.NewServer(cfg)

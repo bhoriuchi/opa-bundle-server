@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bhoriuchi/opa-bundle-server/cli"
+	"github.com/bhoriuchi/opa-bundle-server/core/cli"
 )
 
 func main() {

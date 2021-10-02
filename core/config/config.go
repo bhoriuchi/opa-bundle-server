@@ -41,10 +41,11 @@ type Store struct {
 }
 
 type Bundle struct {
-	Store      string `json:"store" yaml:"store"`
-	Webhook    string `json:"webhook" yaml:"webhook"`
-	Publisher  string `json:"publisher" yaml:"publisher"`
-	Subscriber string `json:"subscriber" yaml:"subscriber"`
+	Store      string   `json:"store" yaml:"store"`
+	Webhook    string   `json:"webhook" yaml:"webhook"`
+	Publisher  string   `json:"publisher" yaml:"publisher"`
+	Subscriber string   `json:"subscriber" yaml:"subscriber"`
+	Remotes    []string `json:"remotes" yaml:"remotes"`
 }
 
 // NewConfig creates a new config from config content

@@ -35,6 +35,39 @@ func (s *Server) Start(ctx context.Context) error {
 		w.Write([]byte("ok"))
 	})
 
+	// version the api
+	r.Route("/v1", func(r chi.Router) {
+		// handle webhooks
+		r.Post("/webhooks/{name}", func(w http.ResponseWriter, r *http.Request) {
+			name := chi.URLParam(r, "name")
+			s.service.HandleWebhook(name, w, r)
+		})
+
+		r.Get("/bundles/{name}", func(w http.ResponseWriter, r *http.Request) {
+			name := chi.URLParam(r, "name")
+			s.service.Logger().Tracef("bundle request for %s", name)
+			s.service.HandleBundle(name, w, r)
+		})
+		r.Post("/bundles/{name}/rebuild", func(w http.ResponseWriter, r *http.Request) {
+			name := chi.URLParam(r, "name")
+			bundles := s.service.Bundles()
+			b, ok := bundles[name]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
+			s.service.Logger().Tracef("calling rebuild on bundle %s", name)
+			if err := b.Rebuild(r.Context()); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+		})
+	})
+
 	srvConfig := s.service.Config().Server
 	if srvConfig == nil {
 		srvConfig = &config.Server{

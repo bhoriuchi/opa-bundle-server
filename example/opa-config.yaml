@@ -1,0 +1,8 @@
+services:
+  bs:
+    url: http://bundle1:8085/v1/bundles
+
+bundles:
+  data:
+    service: bs
+    resource: test

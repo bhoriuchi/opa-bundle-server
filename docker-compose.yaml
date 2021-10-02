@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  # consul
+  consul1:
+    image: consul:1.10.0
+    restart: always
+    networks:
+      - dev
+    ports:
+      - '8501:8500'
+      - '8601:8600/tcp'
+      - '8601:8600/udp'
+    command: agent -server -ui -client '{{ GetInterfaceIP "eth0" }}' -bind '{{ GetInterfaceIP "eth0" }}' -bootstrap-expect=1 -datacenter=dc1
+
+  # opa
+  opa:
+    image: openpolicyagent/opa
+    restart: always
+    volumes:
+      - "./example/opa-config.yaml:/app/config.yaml"
+    networks:
+      - dev
+    ports:
+      - '8781:8181'
+    command: run --server -c /app/config.yaml --log-level debug
+
+  # bundle server
+  bundle1:
+    build: ./
+    volumes:
+      - "./example/config.yaml:/app/config.yaml"
+    networks:
+      - dev
+    ports:
+      - "8085:8085"
+    command: server start --config /app/config.yaml --log-level trace
+    depends_on:
+      - consul1
+
+networks:
+  dev:
