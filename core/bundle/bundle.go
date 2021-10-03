@@ -14,7 +14,6 @@ import (
 	"github.com/bhoriuchi/opa-bundle-server/plugins/publisher"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/remote"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/store"
-	"github.com/bhoriuchi/opa-bundle-server/plugins/subscriber"
 	"github.com/oleiade/lane"
 	"github.com/open-policy-agent/opa/util"
 )
@@ -32,7 +31,7 @@ type Bundle struct {
 	Logger     logger.Logger
 	Store      store.Store
 	Webhook    string
-	Subscriber subscriber.Subscriber
+	Subscriber string
 	Publisher  publisher.Publisher
 	Remotes    []remote.Remote
 	Config     *config.Bundle
@@ -83,7 +82,7 @@ func (b *Bundle) Activate() error {
 	b.dq = lane.NewCappedDeque(1)
 
 	ctx, b.pollCancel = context.WithCancel(context.Background())
-	b.loop(ctx)
+	go b.loop(ctx)
 
 	b.activated = true
 	return nil
@@ -135,7 +134,7 @@ func (b *Bundle) loop(ctx context.Context) {
 			delay = time.Duration(((max-min)*rand.Float64())+min) * time.Second
 		}
 
-		b.Logger.Debugf("Waiting %v before next download/retry.", delay)
+		b.Logger.Debugf("Waiting %v before next rebuild.", delay)
 
 		select {
 		case <-time.After(delay):

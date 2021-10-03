@@ -11,6 +11,7 @@ import (
 	"github.com/bhoriuchi/opa-bundle-server/core/config"
 	"github.com/bhoriuchi/opa-bundle-server/core/logger"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/store"
+	"github.com/bhoriuchi/opa-bundle-server/plugins/subscriber"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/webhook"
 	"github.com/sirupsen/logrus"
 )
@@ -23,6 +24,7 @@ type Service struct {
 	stores        map[string]store.Store
 	bundles       map[string]*bundle.Bundle
 	webhooks      map[string]webhook.Webhook
+	subscribers   map[string]subscriber.Subscriber
 	logger        logger.Logger
 }
 
@@ -50,6 +52,10 @@ func NewService(serviceConfig *Config) (*Service, error) {
 
 	s := &Service{
 		serviceConfig: serviceConfig,
+		stores:        map[string]store.Store{},
+		bundles:       map[string]*bundle.Bundle{},
+		webhooks:      map[string]webhook.Webhook{},
+		subscribers:   map[string]subscriber.Subscriber{},
 		logger:        log,
 	}
 
@@ -127,14 +133,13 @@ func (s *Service) LoadBundles() error {
 		}
 	}
 
-	s.bundles = map[string]*bundle.Bundle{}
-
 	for name, config := range s.config.Bundles {
 		b := &bundle.Bundle{
-			Name:    name,
-			Logger:  s.logger,
-			Webhook: config.Webhook,
-			Config:  config,
+			Name:       name,
+			Logger:     s.logger,
+			Webhook:    config.Webhook,
+			Subscriber: config.Subscriber,
+			Config:     config,
 		}
 
 		if b.Store, ok = s.stores[config.Store]; !ok {
@@ -145,6 +150,7 @@ func (s *Service) LoadBundles() error {
 			s.logger.Errorf("failed to activate bundle %s", name)
 		}
 
+		s.logger.Infof("registered bundle %s", name)
 		s.bundles[name] = b
 	}
 	return nil
@@ -189,6 +195,47 @@ func (s *Service) LoadStores() error {
 
 // LoadSubscribers loads and connects subscribers
 func (s *Service) LoadSubscribers() error {
+	if s.subscribers != nil {
+		for name, sub := range s.subscribers {
+			if err := sub.Disconnect(context.Background()); err != nil {
+				s.logger.Errorf("Failed to disconnect subscriber %s: %s", name, err)
+			}
+		}
+	}
+
+	s.subscribers = map[string]subscriber.Subscriber{}
+
+	// set up new subscribers
+	for name, cfg := range s.config.Subscribers {
+		newFunc, ok := subscriber.Providers[cfg.Type]
+		if !ok {
+			return fmt.Errorf("invalid subscriber provider type %s", cfg.Type)
+		}
+
+		sub, err := newFunc(&subscriber.Options{
+			Name:   name,
+			Logger: s.logger,
+			Config: cfg.Config,
+			Callback: s.HandleCallback(name, "subscriber", func(b *bundle.Bundle) bool {
+				return b.Subscriber == name
+			}),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to initialize %s subscriber %s: %s", cfg.Type, name, err)
+		}
+
+		if err := sub.Connect(context.TODO()); err != nil {
+			return fmt.Errorf("failed to connect %s subscriber %s: %s", cfg.Type, name, err)
+		}
+
+		if err := sub.Subscribe(context.TODO()); err != nil {
+			return fmt.Errorf("failed to subscribe %s subscriber %s: %s", cfg.Type, name, err)
+		}
+
+		s.logger.Infof("registering subscriber %s", name)
+		s.subscribers[name] = sub
+	}
+
 	return nil
 }
 
@@ -209,10 +256,12 @@ func (s *Service) LoadWebhooks() error {
 		}
 
 		hook, err := newFunc(webhook.Options{
-			Name:     name,
-			Logger:   s.logger,
-			Config:   cfg.Config,
-			Callback: s.HandleWebhookAction(name),
+			Name:   name,
+			Logger: s.logger,
+			Config: cfg.Config,
+			Callback: s.HandleCallback(name, "webhook", func(b *bundle.Bundle) bool {
+				return b.Webhook == name
+			}),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize %s webhook %s: %s", cfg.Type, name, err)
@@ -234,16 +283,23 @@ func (s *Service) HandleWebhook(name string, w http.ResponseWriter, r *http.Requ
 	hook.Handle(w, r)
 }
 
-// Handles the webhook action
-func (s *Service) HandleWebhookAction(hookName string) func() {
+func (s *Service) HandleCallback(name, typ string, matcher func(b *bundle.Bundle) bool) func() {
 	return func() {
+		if len(s.bundles) == 0 {
+			s.logger.Warnf("no bundles were registered on the service")
+			return
+		}
 		for bundleName, bundle := range s.bundles {
-			if bundle.Webhook == hookName {
+			s.logger.Tracef("attempting to match bundle %s", bundleName)
+			if matcher(bundle) {
+				s.logger.Tracef("%s callback handler %s matched bundle %s", typ, name, bundleName)
 				if err := bundle.Rebuild(context.TODO()); err != nil {
 					s.logger.Errorf("failed to rebuild bundle %s: %s", bundleName, err)
 				}
+				return
 			}
 		}
+		s.logger.Warnf("%s callback handler %s did not match and plugins", typ, name)
 	}
 }
 

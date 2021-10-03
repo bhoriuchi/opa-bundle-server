@@ -17,8 +17,18 @@ webhooks:
       events:
         - push
 
+subscribers:
+  test:
+    type: consul
+    config:
+      prefix: bundles/test
+      consul:
+        address: http://consul1:8500
+
+
 bundles:
   test:
     store: test
     webhook: test
+    subscriber: test
     
