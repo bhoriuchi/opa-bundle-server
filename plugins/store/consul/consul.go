@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"path"
@@ -11,6 +12,7 @@ import (
 	"github.com/bhoriuchi/opa-bundle-server/core/utils"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/store"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/open-policy-agent/opa/bundle"
 )
 
 const (
@@ -106,5 +108,10 @@ func (s *Store) Bundle(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 
-	return store.Bundle(ctx, archive, s.config.Consul.Address)
+	loader := bundle.NewTarballLoaderWithBaseURL(
+		bytes.NewReader(archive),
+		s.config.Consul.Address,
+	)
+
+	return store.Bundle(ctx, loader)
 }

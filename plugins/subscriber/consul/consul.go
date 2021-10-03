@@ -10,7 +10,6 @@ import (
 	"github.com/bhoriuchi/opa-bundle-server/core/logger"
 	"github.com/bhoriuchi/opa-bundle-server/core/utils"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/subscriber"
-	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 )
 
@@ -116,10 +115,7 @@ func (s *Subscriber) Subscribe(ctx context.Context) (err error) {
 
 	s.wp.HybridHandler = func(bv watch.BlockingParamVal, data interface{}) {
 		s.logger.Tracef("consul subscriber %s received a message", s.name)
-		switch data.(type) {
-		case api.KVPairs:
-			s.debounce(s.cb)
-		}
+		s.debounce(s.cb)
 	}
 
 	go func() {

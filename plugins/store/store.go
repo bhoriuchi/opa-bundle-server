@@ -167,8 +167,7 @@ func Archive(ctx context.Context, entries EntryList) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func Bundle(ctx context.Context, archive []byte, baseURL string) ([]byte, error) {
-	loader := bundle.NewTarballLoaderWithBaseURL(bytes.NewReader(archive), baseURL)
+func Bundle(ctx context.Context, loader bundle.DirectoryLoader) ([]byte, error) {
 	reader := bundle.NewCustomReader(loader)
 
 	b, err := reader.Read()
