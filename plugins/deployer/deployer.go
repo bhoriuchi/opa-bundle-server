@@ -19,7 +19,5 @@ type Options struct {
 }
 
 type Deployer interface {
-	Connect(ctx context.Context) (err error)
-	Disconnect(ctx context.Context) (err error)
 	Deploy(ctx context.Context) (err error)
 }
