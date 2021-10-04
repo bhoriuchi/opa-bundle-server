@@ -54,7 +54,7 @@ func NewStore(opts *store.Options) (store.Store, error) {
 
 // Connect is noop but required to implement store interface
 func (s *Store) Connect(ctx context.Context) (err error) {
-	s.logger.Debugf("connecting to git store %s", s.name)
+	s.logger.Debug("connecting to git store %s", s.name)
 	return
 }
 
@@ -70,7 +70,7 @@ func (s *Store) Bundle(ctx context.Context) ([]byte, error) {
 	// Get the pwd
 	pwd, err := os.Getwd()
 	if err != nil {
-		s.logger.Errorf("error getting wd: %s", err)
+		s.logger.Error("error getting wd: %s", err)
 	}
 
 	parentDir := os.TempDir()
@@ -87,7 +87,7 @@ func (s *Store) Bundle(ctx context.Context) ([]byte, error) {
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
-			s.logger.Errorf("failed to clean up temp directory %s for git store %s: %s", dir, s.name, err)
+			s.logger.Error("failed to clean up temp directory %s for git store %s: %s", dir, s.name, err)
 		}
 	}()
 
@@ -108,7 +108,7 @@ func (s *Store) Bundle(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 
-	s.logger.Debugf("successfully cloned %s in store %s", res.Dst, s.name)
+	s.logger.Debug("successfully cloned %s in store %s", res.Dst, s.name)
 
 	loader := bundle.NewDirectoryLoader(res.Dst)
 	return store.Bundle(ctx, loader)

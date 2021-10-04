@@ -26,6 +26,7 @@ func initServerStartCmd() *cobra.Command {
 		watch      bool
 		configFile string
 		logLevel   string
+		logFormat  string
 	)
 
 	cmd := &cobra.Command{
@@ -42,9 +43,10 @@ func initServerStartCmd() *cobra.Command {
 			}
 
 			cfg := &service.Config{
-				Watch:    watch,
-				File:     p,
-				LogLevel: logLevel,
+				Watch:     watch,
+				File:      p,
+				LogLevel:  logLevel,
+				LogFormat: logFormat,
 			}
 
 			srv, err := server.NewServer(cfg)
@@ -57,8 +59,9 @@ func initServerStartCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&configFile, "config", os.Getenv("OPA_BUNDLE_SERVER_CONFIG"), "Location of the config file")
-	flags.StringVar(&logLevel, "log-level", os.Getenv("OPA_BUNDLE_SERVER_LOG_LEVEL"), "Log level")
+	flags.StringVarP(&configFile, "config", "c", os.Getenv("OPA_BUNDLE_SERVER_CONFIG"), "Location of the config file")
+	flags.StringVarP(&logLevel, "log-level", "l", os.Getenv("OPA_BUNDLE_SERVER_LOG_LEVEL"), "Log level (error, info, warn, debug)")
+	flags.StringVar(&logFormat, "log-format", os.Getenv("OPA_BUNDLE_SERVER_LOG_FORMAT"), "Log format (text, json-pretty, or json)")
 
 	return cmd
 }

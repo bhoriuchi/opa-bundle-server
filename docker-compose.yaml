@@ -34,7 +34,7 @@ services:
       - dev
     ports:
       - "8085:8085"
-    command: server start --config /app/config.yaml --log-level trace
+    command: server start --config /app/config.yaml --log-level debug
     depends_on:
       - consul1
 

@@ -73,7 +73,7 @@ func NewWebhook(opts webhook.Options) (webhook.Webhook, error) {
 
 func (h *Webhook) Handle(w http.ResponseWriter, r *http.Request) {
 	if _, err := h.hook.Parse(r, h.events...); err != nil {
-		h.logger.Errorf("error parsing webhook %s: %s", h.name, err)
+		h.logger.Error("error parsing webhook %s: %s", h.name, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return

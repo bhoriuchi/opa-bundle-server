@@ -64,7 +64,7 @@ func NewStore(opts *store.Options) (store.Store, error) {
 
 // Connect is noop but required to implement store interface
 func (s *Store) Connect(ctx context.Context) (err error) {
-	s.logger.Debugf("connecting to consul store %s", s.name)
+	s.logger.Debug("connecting to consul store %s at %s", s.name, s.config.Consul.Address)
 	if s.client != nil {
 		return fmt.Errorf("already connected")
 	}
@@ -84,10 +84,10 @@ func (s *Store) Disconnect(ctx context.Context) (err error) {
 
 // Bundle
 func (s *Store) Bundle(ctx context.Context) ([]byte, error) {
-	s.logger.Tracef("listing prefix %s", s.config.Prefix)
+	s.logger.Debug("listing prefix %s", s.config.Prefix)
 	pairs, _, err := s.client.List(s.config.Prefix, &consulapi.QueryOptions{})
 	if err != nil {
-		s.logger.Errorf("failed to list consul store %s: %s", s.name, err)
+		s.logger.Error("failed to list consul store %s: %s", s.name, err)
 		return nil, err
 	}
 

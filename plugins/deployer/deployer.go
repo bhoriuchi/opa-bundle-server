@@ -1,4 +1,4 @@
-package publisher
+package deployer
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	Providers = map[string]NewPublisherFunc{}
+	Providers = map[string]NewDeployerFunc{}
 )
 
-type NewPublisherFunc func(opts *Options) (Publisher, error)
+type NewDeployerFunc func(opts *Options) (Deployer, error)
 
 type Options struct {
 	Name   string
@@ -18,8 +18,8 @@ type Options struct {
 	Logger logger.Logger
 }
 
-type Publisher interface {
+type Deployer interface {
 	Connect(ctx context.Context) (err error)
 	Disconnect(ctx context.Context) (err error)
-	Publish(ctx context.Context, payload []byte) (err error)
+	Deploy(ctx context.Context) (err error)
 }

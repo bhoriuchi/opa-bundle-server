@@ -175,6 +175,7 @@ func Bundle(ctx context.Context, loader bundle.DirectoryLoader) ([]byte, error) 
 		return nil, err
 	}
 
+	// TODO: support all compile options from config file
 	buf := bytes.NewBuffer([]byte{})
 	compiler := compile.New().
 		WithCapabilities(ast.CapabilitiesForThisVersion()).

@@ -1,34 +1,57 @@
+# Data in the meta key can be used to populate
+# go templates in the rest of the configuration
+meta:
+  consul:
+    address: http://consul1:8500
+
+# server runtime configuration
 server:
   address: ":8085"
 
+# store configurations
 stores:
-  test:
+  test_store:
     type: consul
     config:
       prefix: bundles/test
       consul:
-        address: http://consul1:8500
+        address: "{{.Meta.consul.address}}"
 
+# webhook configurations
 webhooks:
-  test:
+  test_hook:
     type: gogs
     config:
       secret: sauce
       events:
         - push
 
+# subscriber configurations
 subscribers:
-  test:
+  test_sub:
     type: consul
     config:
-      prefix: bundles/test
+      topic: bundles/test
       consul:
-        address: http://consul1:8500
+        address: "{{.Meta.consul.address}}"
 
+# publisher configurations
+publishers:
+  test_pub:
+    type: consul
+    config:
+      topic: opabundle
+      consul:
+        address: "{{.Meta.consul.address}}"
 
+# bundle configurations
 bundles:
   test:
-    store: test
-    webhook: test
-    subscriber: test
+    store: test_store
+    webhooks:
+      - test_hook
+    subscribers:
+      - test_sub
+    publishers:
+      - test_pub
     

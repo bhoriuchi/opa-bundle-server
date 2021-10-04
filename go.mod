@@ -7,6 +7,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/go-playground/webhooks/v6 v6.0.0-beta.3
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/consul/api v1.11.0 // indirect
 	github.com/hashicorp/go-getter/v2 v2.0.0 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect

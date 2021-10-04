@@ -45,7 +45,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 		r.Get("/bundles/{name}", func(w http.ResponseWriter, r *http.Request) {
 			name := chi.URLParam(r, "name")
-			s.service.Logger().Tracef("bundle request for %s", name)
+			s.service.Logger().Debug("bundle request for %s", name)
 			s.service.HandleBundle(name, w, r)
 		})
 		r.Post("/bundles/{name}/rebuild", func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func (s *Server) Start(ctx context.Context) error {
 				return
 			}
 
-			s.service.Logger().Tracef("calling rebuild on bundle %s", name)
+			s.service.Logger().Debug("calling rebuild on bundle %s", name)
 			if err := b.Rebuild(r.Context()); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(err.Error()))
@@ -75,6 +75,6 @@ func (s *Server) Start(ctx context.Context) error {
 		}
 	}
 
-	s.service.Logger().Infof("starting bundle server on %s", srvConfig.Address)
+	s.service.Logger().Info("starting bundle server on %s", srvConfig.Address)
 	return http.ListenAndServe(srvConfig.Address, r)
 }

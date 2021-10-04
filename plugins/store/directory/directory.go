@@ -50,7 +50,7 @@ func NewStore(opts *store.Options) (store.Store, error) {
 
 // Connect is noop but required to implement store interface
 func (s *Store) Connect(ctx context.Context) (err error) {
-	s.logger.Debugf("connecting to directory store %s", s.name)
+	s.logger.Debug("connecting to directory store %s", s.name)
 	return
 }
 

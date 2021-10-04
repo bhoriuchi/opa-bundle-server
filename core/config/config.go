@@ -2,14 +2,22 @@ package config
 
 import (
 	"bytes"
-	"encoding/json"
+	"os"
+	"strings"
+	"text/template"
 
-	"github.com/ghodss/yaml"
+	"github.com/bhoriuchi/opa-bundle-server/core/utils"
 )
+
+type TemplateData struct {
+	Meta map[string]interface{} `json:"meta" yaml:"meta"`
+	Env  map[string]string      `json:"env" yaml:"env"`
+}
 
 type Config struct {
 	Server      *Server                `json:"server" yaml:"server"`
 	Stores      map[string]*Store      `json:"stores" yaml:"stores"`
+	Deployers   map[string]*Deployer   `json:"deployers" yaml:"deployers"`
 	Webhooks    map[string]*Webhook    `json:"webhooks" yaml:"webhooks"`
 	Subscribers map[string]*Subscriber `json:"subscribers" yaml:"subscribers"`
 	Publishers  map[string]*Publisher  `json:"publishers" yaml:"publishers"`
@@ -18,6 +26,11 @@ type Config struct {
 
 type Server struct {
 	Address string `json:"address" yaml:"address"`
+}
+
+type Deployer struct {
+	Type   string      `json:"type" yaml:"type"`
+	Config interface{} `json:"config" yaml:"config"`
 }
 
 type Subscriber struct {
@@ -41,12 +54,12 @@ type Store struct {
 }
 
 type Bundle struct {
-	Store      string   `json:"store" yaml:"store"`
-	Webhook    string   `json:"webhook" yaml:"webhook"`
-	Publisher  string   `json:"publisher" yaml:"publisher"`
-	Subscriber string   `json:"subscriber" yaml:"subscriber"`
-	Remotes    []string `json:"remotes" yaml:"remotes"`
-	Polling    Polling  `json:"polling" yaml:"polling"`
+	Store       string   `json:"store" yaml:"store"`
+	Webhooks    []string `json:"webhooks" yaml:"webhooks"`
+	Publishers  []string `json:"publishers" yaml:"publishers"`
+	Subscribers []string `json:"subscribers" yaml:"subscribers"`
+	Deployers   []string `json:"deployers" yaml:"deployers"`
+	Polling     Polling  `json:"polling" yaml:"polling"`
 }
 
 type Polling struct {
@@ -57,16 +70,33 @@ type Polling struct {
 
 // NewConfig creates a new config from config content
 func NewConfig(content []byte) (*Config, error) {
-	c := &Config{}
+	data := &TemplateData{}
 	content = bytes.TrimSpace(content)
-	if bytes.HasPrefix(content, []byte("{")) && bytes.HasSuffix(content, []byte("}")) {
-		if err := json.Unmarshal(content, c); err != nil {
-			return nil, err
-		}
-		return c, nil
+
+	if err := utils.Unmarshal(content, data); err != nil {
+		return nil, err
 	}
 
-	if err := yaml.Unmarshal(content, c); err != nil {
+	data.Env = map[string]string{}
+	for _, env := range os.Environ() {
+		parts := strings.SplitN(env, "=", 2)
+		if len(parts) == 2 {
+			data.Env[parts[0]] = parts[1]
+		}
+	}
+
+	tmpl, err := template.New("config").Parse(string(content))
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer([]byte{})
+	if err := tmpl.Execute(buf, data); err != nil {
+		return nil, err
+	}
+
+	c := &Config{}
+	if err := utils.Unmarshal(buf.Bytes(), c); err != nil {
 		return nil, err
 	}
 
