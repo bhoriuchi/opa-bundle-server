@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"sync"
+	gosync "sync"
 
 	"github.com/bhoriuchi/opa-bundle-server/core/bundle"
 	"github.com/bhoriuchi/opa-bundle-server/core/config"
 	"github.com/bhoriuchi/opa-bundle-server/core/logger"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/deployer"
+	"github.com/bhoriuchi/opa-bundle-server/plugins/lock"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/publisher"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/store"
 	"github.com/bhoriuchi/opa-bundle-server/plugins/subscriber"
@@ -19,9 +20,10 @@ import (
 
 // Service implements service
 type Service struct {
-	mx            sync.Mutex
+	mx            gosync.Mutex
 	serviceConfig *Config
 	config        *config.Config
+	lock          lock.Lock
 	stores        map[string]store.Store
 	bundles       map[string]*bundle.Bundle
 	webhooks      map[string]webhook.Webhook
@@ -89,6 +91,10 @@ func (s *Service) ReloadConfig(ctx context.Context) error {
 	}
 
 	s.config = cfg
+
+	if err := s.Lock(ctx); err != nil {
+		return err
+	}
 
 	if err := s.LoadStores(ctx); err != nil {
 		return err

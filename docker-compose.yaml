@@ -38,5 +38,18 @@ services:
     depends_on:
       - consul1
 
+  # bundle server
+  bundle2:
+    build: ./
+    volumes:
+      - "./example/config.yaml:/app/config.yaml"
+    networks:
+      - dev
+    ports:
+      - "8086:8085"
+    command: server start --config /app/config.yaml --log-level debug
+    depends_on:
+      - consul1
+
 networks:
   dev:

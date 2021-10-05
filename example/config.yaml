@@ -8,6 +8,13 @@ meta:
 server:
   address: ":8085"
 
+lock:
+  type: consul
+  config:
+    key: locks/opa-bundle-server
+    consul:
+      address: "{{.Meta.consul.address}}"
+
 # store configurations
 stores:
   test_store:

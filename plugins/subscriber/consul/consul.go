@@ -98,6 +98,7 @@ func (s *Subscriber) Disconnect(ctx context.Context) (err error) {
 	}
 
 	s.Unsubscribe(ctx)
+	s.client = nil
 	return
 }
 

@@ -16,6 +16,7 @@ type TemplateData struct {
 
 type Config struct {
 	Server      *Server                `json:"server" yaml:"server"`
+	Lock        *Lock                  `json:"lock" yaml:"lock"`
 	Stores      map[string]*Store      `json:"stores" yaml:"stores"`
 	Deployers   map[string]*Deployer   `json:"deployers" yaml:"deployers"`
 	Webhooks    map[string]*Webhook    `json:"webhooks" yaml:"webhooks"`
@@ -26,6 +27,11 @@ type Config struct {
 
 type Server struct {
 	Address string `json:"address" yaml:"address"`
+}
+
+type Lock struct {
+	Type   string      `json:"type" yaml:"type"`
+	Config interface{} `json:"config" yaml:"config"`
 }
 
 type Deployer struct {

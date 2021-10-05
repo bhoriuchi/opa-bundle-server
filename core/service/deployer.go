@@ -9,14 +9,6 @@ import (
 
 // LoadDeployers loads and connects deployers
 func (s *Service) LoadDeployers(ctx context.Context) error {
-	if s.deployers != nil {
-		for name, deployer := range s.deployers {
-			if err := deployer.Disconnect(ctx); err != nil {
-				s.logger.Error("Failed to disconnect deployer %s: %s", name, err)
-			}
-		}
-	}
-
 	s.deployers = map[string]deployer.Deployer{}
 
 	// set up new deployer
@@ -33,10 +25,6 @@ func (s *Service) LoadDeployers(ctx context.Context) error {
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize %s deployer %s: %s", cfg.Type, name, err)
-		}
-
-		if err := deployer.Connect(ctx); err != nil {
-			return fmt.Errorf("failed to connect %s deployer %s: %s", cfg.Type, name, err)
 		}
 
 		s.logger.Info("registering deployer %s", name)
